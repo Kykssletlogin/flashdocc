@@ -1,3 +1,5 @@
+const https = require('https');
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
@@ -11,41 +13,51 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 2048,
-        messages: body.messages,
-      }),
+    const payload = JSON.stringify({
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 2048,
+      messages: body.messages,
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return {
-        statusCode: response.status,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: data.error?.message || 'Erreur API' }),
+    const result = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.anthropic.com',
+        path: '/v1/messages',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Length': Buffer.byteLength(payload),
+        },
       };
-    }
+
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          resolve({ statusCode: res.statusCode, body: data });
+        });
+      });
+
+      req.on('error', (err) => reject(err));
+      req.write(payload);
+      req.end();
+    });
 
     return {
-      statusCode: 200,
+      statusCode: result.statusCode,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
       },
-      body: JSON.stringify(data),
+      body: result.body,
     };
 
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'Erreur serveur : ' + err.message }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Erreur serveur : ' + err.message }),
+    };
   }
 };
