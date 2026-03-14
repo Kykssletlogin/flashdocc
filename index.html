@@ -1752,7 +1752,7 @@ async function processWithClaude(input,inputType='text'){
   try{
     let html='';
     if(userData.settings.mock){await new Promise(r=>setTimeout(r,1800));html=getMockResult(inputType,lang);addLog('Mock utilisé');}
-    else{const msgs=inputType==='image'?[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:input}},{type:'text',text:sys+'\n\nAnalyse et restructure ce document image.'}]}]:[{role:'user',content:sys+'\n\nContenu :\n\n'+input}];html=await callClaudeAPI(msgs);addLog('Réponse API reçue');}
+    else{const msgs=inputType==='image'?[{role:'user',content:[{type:'image',source:{type:'base64',media_type:input.startsWith('/9j')?'image/jpeg':'image/png',data:input}},{type:'text',text:sys+'\n\nAnalyse et restructure ce document image.'}]}]:[{role:'user',content:sys+'\n\nContenu :\n\n'+input}];html=await callClaudeAPI(msgs);addLog('Réponse API reçue');}
     consumeScan();state.currentResult=html;
     document.getElementById('result-content').innerHTML=html;
     document.getElementById('sig-inserted-container').style.display='none';
