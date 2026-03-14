@@ -1,0 +1,24 @@
+# ═══════════════════════════════════════════════
+#  Flashdoc – Configuration Netlify
+# ═══════════════════════════════════════════════
+
+[build]
+  # Dossier publié (le fichier index.html est à la racine)
+  publish = "."
+
+  # Dossier des fonctions serverless
+  functions = "netlify/functions"
+
+# Route : /api/claude → fonction claude.js
+[[redirects]]
+  from   = "/api/claude"
+  to     = "/.netlify/functions/claude"
+  status = 200
+
+# Sécurité : headers recommandés
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
