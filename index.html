@@ -1574,7 +1574,7 @@ function renderProfilePhoto(){
 }
 
 /* ── APP STATE ── */
-let state={currentSection:'home',currentResult:'',currentDocName:'Document',cameraStream:null,capturedImageB64:'',renameDocId:null,histFilter:'all',histSearch:'',currentTemplateId:null,logoTapCount:0,logoTapTimer:null,sigDrawing:false,sigCanvas:null,sigCtx:null};
+let state={currentSection:'home',currentResult:'',currentDocName:'Document',cameraStream:null,capturedImageB64:'',capturedImageType:'image/jpeg',renameDocId:null,histFilter:'all',histSearch:'',currentTemplateId:null,logoTapCount:0,logoTapTimer:null,sigDrawing:false,sigCanvas:null,sigCtx:null};
 
 function addLog(msg){if(!userData)return;const ts=new Date().toLocaleTimeString('fr-FR');userData.logs.push('['+ts+'] '+msg);if(userData.logs.length>100)userData.logs=userData.logs.slice(-100);saveUserData();}
 
@@ -1633,7 +1633,7 @@ const App=(()=>{
     const file=event.target.files[0];if(!file)return;
     const reader=new FileReader();
     reader.onload=e=>{
-      const process=dataUrl=>{state.capturedImageB64=dataUrl.split(',')[1];document.getElementById('preview-img').src=dataUrl;document.getElementById('preview-container').classList.add('active');showToast('Image importée ✓','success');};
+      const process=dataUrl=>{state.capturedImageB64=dataUrl.split(',')[1];state.capturedImageType=dataUrl.split(';')[0].split(':')[1]||'image/jpeg';document.getElementById('preview-img').src=dataUrl;document.getElementById('preview-container').classList.add('active');showToast('Image importée ✓','success');};
       if(file.size>2*1024*1024)compressImage(e.target.result,process);else process(e.target.result);
       state.currentDocName=file.name.replace(/\.[^.]+$/,'')||'Document';addLog('Image importée: '+file.name);
     };
@@ -1752,7 +1752,7 @@ async function processWithClaude(input,inputType='text'){
   try{
     let html='';
     if(userData.settings.mock){await new Promise(r=>setTimeout(r,1800));html=getMockResult(inputType,lang);addLog('Mock utilisé');}
-    else{const msgs=inputType==='image'?[{role:'user',content:[{type:'image',source:{type:'base64',media_type:input.startsWith('/9j')?'image/jpeg':'image/png',data:input}},{type:'text',text:sys+'\n\nAnalyse et restructure ce document image.'}]}]:[{role:'user',content:sys+'\n\nContenu :\n\n'+input}];html=await callClaudeAPI(msgs);addLog('Réponse API reçue');}
+    else{const msgs=inputType==='image'?[{role:'user',content:[{type:'image',source:{type:'base64',media_type:state.capturedImageType||'image/jpeg',data:input}},{type:'text',text:sys+'\n\nAnalyse et restructure ce document image.'}]}]:[{role:'user',content:sys+'\n\nContenu :\n\n'+input}];html=await callClaudeAPI(msgs);addLog('Réponse API reçue');}
     consumeScan();state.currentResult=html;
     document.getElementById('result-content').innerHTML=html;
     document.getElementById('sig-inserted-container').style.display='none';
