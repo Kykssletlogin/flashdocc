@@ -986,7 +986,7 @@ function sendBroadcast() {
   if (!msg) return;
   showToast('[Broadcast] ' + msg, 'info');
   document.getElementById('broadcast-msg').value = '';
-  addLog('[ADMIN] Broadcast: ' + msg.substring(0, 40));
+  console.log('[ADMIN] Broadcast: ' + msg.substring(0, 40));
 }
 function adminResetAllQuotas() {
   getUsers().forEach(u => {
